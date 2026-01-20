@@ -15,6 +15,6 @@ router.get("/tasks", auth(), getTasksController)
 router.delete("/tasks/:id", auth(), deleteTaskController)
 router.patch("/tasks/:id", auth(), updateTaskController)
 
-router.patch("/tasks/assign-task", auth(["admin"]), assignTaskController)
-router.patch("/tasks/mark-completed", auth(), markTaskAsCompletedController)
+router.patch("/assign-task", auth(["admin"]), assignTaskController)
+router.patch("/mark-completed-task", auth(), markTaskAsCompletedController)
 export default router
