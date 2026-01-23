@@ -15,11 +15,7 @@ export const auth =
 
       if (!decoded) next(new CustomError(401, "Unauthorized: Invalid token"))
 
-      req.user = {
-        id: decoded.id,
-        name: decoded.name,
-        role: decoded.role,
-      }
+      req.user = decoded
 
       if (allowedRoles.length > 0 && !allowedRoles.includes(req.user.role)) {
         return next(

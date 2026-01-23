@@ -19,18 +19,36 @@ export const getTasks = async (user) => {
       : { $or: [{ assignedTo: user.id }, { createdBy: user.id }] }
 
   const tasks = await Task.find(filter)
+    .populate("createdBy", "email")
+    .populate({
+      path: "assignedTo",
+      select: "email",
+      match: { _id: { $ne: null } },
+    })
   return { tasks }
+}
+export const getTaskById = async (taskId, user) => {
+  const task = await Task.findById(taskId)
+  if (!task) throw new CustomError(404, "Task not found")
+
+  if (
+    user.role !== "admin" &&
+    task.createdBy.toString() !== user.id &&
+    task.assignedTo.toString() !== user.id
+  ) {
+    throw new CustomError(403, "forbidden: cannot access this task")
+  }
+  return { task }
 }
 
 export const updateTask = async (taskId, title, description, dueDate, user) => {
   const task = await Task.findById(taskId)
-  console.log(user)
+
   if (!task) throw new CustomError(404, "Task not found")
 
-  if (user.role !== "admin" && task.createdBy.toString() !== user.id) {
+  if (task.createdBy.toString() !== user.id) {
     throw new CustomError(403, "forbidden: cannot update this task")
   }
-  console.log(task)
   const updatedTask = await Task.findByIdAndUpdate(
     taskId,
     { title, description, dueDate },
@@ -57,7 +75,7 @@ export const markTaskAsCompleted = async (taskId, user) => {
       new: true,
     },
   )
-  return { status: updatedTask.status }
+  return { updatedTask }
 }
 
 export const assignTask = async (taskId, assignedTo, user) => {
@@ -68,21 +86,37 @@ export const assignTask = async (taskId, assignedTo, user) => {
 
   if (!task) throw new CustomError(404, "Task not found")
 
-  const updatedTask = await Task.findByIdAndUpdate(taskId, { assignedTo })
+  const updatedTask = await Task.findByIdAndUpdate(
+    taskId,
+    { assignedTo },
+    {
+      new: true,
+    },
+  ).populate("assignedTo", "email")
   return { updatedTask }
 }
 
 export const deleteTask = async (taskId, user) => {
-  if (user.role !== "admin" && task.createdBy.toString() !== user.id) {
-    throw new CustomError(403, "forbidden: cannot delete this task")
-  }
   const task = await Task.findById(taskId)
 
   if (!task) throw new CustomError(404, "Task not found")
 
-  if (user.role !== "admin" && task.createdBy.toString() !== user.id) {
+  let canDelete =
+    user.role === "admin" ||
+    (task.createdBy.toString() === user.id &&
+      (!task.assignedTo || task.assignedTo?.toString() === user.id))
+
+  if (!canDelete) {
     throw new CustomError(403, "forbidden: cannot delete this task")
   }
 
   await task.deleteOne()
+}
+
+export const getTaskCount = async (user) => {
+  if (user.role !== "admin")
+    throw new CustomError(403, "only admins can access task count")
+
+  const count = await Task.countDocuments({})
+  return { count }
 }

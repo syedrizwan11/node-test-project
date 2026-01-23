@@ -3,6 +3,8 @@ import {
   assignTaskController,
   createTaskController,
   deleteTaskController,
+  getTaskByIdController,
+  getTaskCountController,
   getTasksController,
   markTaskAsCompletedController,
   updateTaskController,
@@ -12,9 +14,12 @@ const router = Router()
 
 router.post("/tasks", auth(), createTaskController)
 router.get("/tasks", auth(), getTasksController)
+router.get("/tasks/:id", auth(), getTaskByIdController)
 router.delete("/tasks/:id", auth(), deleteTaskController)
 router.patch("/tasks/:id", auth(), updateTaskController)
 
-router.patch("/assign-task", auth(["admin"]), assignTaskController)
-router.patch("/mark-completed-task", auth(), markTaskAsCompletedController)
+router.post("/assign-task", auth(["admin"]), assignTaskController)
+router.post("/mark-task-as-completed", auth(), markTaskAsCompletedController)
+
+router.get("/tasks-count", auth(["admin"]), getTaskCountController)
 export default router

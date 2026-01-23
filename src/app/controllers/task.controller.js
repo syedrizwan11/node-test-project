@@ -3,6 +3,8 @@ import {
   assignTask,
   createTask,
   deleteTask,
+  getTaskById,
+  getTaskCount,
   getTasks,
   markTaskAsCompleted,
   updateTask,
@@ -25,7 +27,6 @@ const updateTaskSchema = Joi.object({
 
 const markTaskAsCompletedSchema = Joi.object({
   id: Joi.string().required(),
-  completed: Joi.boolean().required(),
 })
 
 const assignTaskSchema = Joi.object({
@@ -34,6 +35,10 @@ const assignTaskSchema = Joi.object({
 })
 
 const deleteTaskSchema = Joi.object({
+  id: Joi.string().required(),
+})
+
+const getTaskByIdSchema = Joi.object({
   id: Joi.string().required(),
 })
 
@@ -51,7 +56,17 @@ export const createTaskController = asyncHandler(async (req, res) => {
 
 export const getTasksController = asyncHandler(async (req, res) => {
   const data = await getTasks(req.user)
-  apiResponse(res, 200, "tasks retrieved", data)
+  apiResponse(res, 200, "tasks retrieved", data.tasks)
+})
+
+export const getTaskByIdController = asyncHandler(async (req, res) => {
+  const { error, value } = getTaskByIdSchema.validate(req.params)
+  if (error) {
+    throw new CustomError(400, error.details[0].message)
+  }
+  const { id } = value
+  const data = await getTaskById(id, req.user)
+  apiResponse(res, 200, "task retrieved", data.task)
 })
 
 export const updateTaskController = asyncHandler(async (req, res) => {
@@ -77,11 +92,11 @@ export const markTaskAsCompletedController = asyncHandler(async (req, res) => {
   if (error) {
     throw new CustomError(400, error.details[0].message)
   }
-  const { id, completed } = value
+  const { id } = value
 
   const data = await markTaskAsCompleted(id, req.user)
 
-  apiResponse(res, 200, "task updated", data)
+  apiResponse(res, 200, "task updated", data.updatedTask)
 })
 
 export const assignTaskController = async (req, res) => {
@@ -93,7 +108,7 @@ export const assignTaskController = async (req, res) => {
   try {
     const data = await assignTask(id, assignedTo, req.user)
 
-    apiResponse(res, 200, "task assigned", data)
+    apiResponse(res, 200, "task assigned", data.updatedTask)
   } catch (error) {
     if (error instanceof CustomError) {
       throw new CustomError(error.statusCode, error.message)
@@ -112,4 +127,9 @@ export const deleteTaskController = asyncHandler(async (req, res) => {
   const data = await deleteTask(id, req.user)
 
   apiResponse(res, 200, "task deleted", {})
+})
+
+export const getTaskCountController = asyncHandler(async (req, res) => {
+  const data = await getTaskCount(req.user)
+  apiResponse(res, 200, "task count retrieved", data.count)
 })

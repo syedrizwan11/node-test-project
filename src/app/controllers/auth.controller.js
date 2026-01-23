@@ -1,4 +1,8 @@
-import { registerUser, loginUser } from "../services/auth.service.js"
+import {
+  registerUser,
+  loginUser,
+  decodeToken,
+} from "../services/auth.service.js"
 import { apiResponse } from "../utils/apiResponse.js"
 import { CustomError } from "../utils/customError.js"
 import Joi from "joi"
@@ -47,4 +51,21 @@ export const registerController = async (req, res) => {
     }
     throw new CustomError(500, "internal server error")
   }
+}
+
+export const tokedDecodeController = async (req, res) => {
+  try {
+    const data = await decodeToken(req.cookies?.token)
+    apiResponse(res, 200, "token decoded", data.user)
+  } catch (error) {
+    if (error instanceof CustomError) {
+      throw new CustomError(error.statusCode, error.message)
+    }
+    throw new CustomError(500, "internal server error")
+  }
+}
+
+export const logoutController = async (req, res) => {
+  res.setHeader("Set-Cookie", `token=; HttpOnly; Path=/; Max-Age=0;`)
+  apiResponse(res, 200, "user logged out", {})
 }
