@@ -16,9 +16,6 @@ const CreateUserSchema = Joi.object({
   name: Joi.string().required(),
   email: Joi.string().optional(),
   password: Joi.string().required(),
-  role: Joi.string()
-    .valid(...userRoles)
-    .required(),
 })
 
 const UpdateUserSchema = Joi.object({
@@ -45,8 +42,8 @@ export const createUserController = asyncHandler(async (req, res) => {
   if (error) {
     throw new CustomError(400, error.details[0].message)
   }
-  const { name, email, password, role } = value
-  await registerUser(name, email, password, role)
+  const { name, email, password } = value
+  await registerUser(name, email, password)
   apiResponse(res, 200, "user created", {})
 })
 

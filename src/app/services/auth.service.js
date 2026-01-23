@@ -15,11 +15,11 @@ export const generateCookieString = (token) => {
   return `token=${token}; HttpOnly; Path=/; Max-Age=${process.env.COOKIE_EXPIRES_IN};`
 }
 
-export const registerUser = async (name, email, password, role = "user") => {
+export const registerUser = async (name, email, password) => {
   const existingUser = await User.findOne({ email })
   if (existingUser) throw new CustomError(409, "user already exists")
 
-  const user = new User({ name, email, password, role })
+  const user = new User({ name, email, password })
   await user.save()
 
   return { id: user._id, name: user.name, email: user.email, role: user.role }

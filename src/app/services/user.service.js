@@ -3,9 +3,10 @@ import { CustomError } from "../utils/customError.js"
 import { generateCookieString, generateToken } from "./auth.service.js"
 
 export const getUsers = async () => {
-  const users = await User.find({ isActive: true }).select(
-    "_id name role email",
-  )
+  const users = await User.find({
+    isActive: true,
+    role: { $ne: "admin" },
+  }).select("_id name role email")
   if (!users) {
     throw new Error("No users found")
   }
@@ -16,7 +17,10 @@ export const getUserCount = async (user) => {
   if (user.role !== "admin")
     throw new CustomError(403, "only admins can access user count")
 
-  const count = await User.countDocuments({ isActive: true })
+  const count = await User.countDocuments({
+    isActive: true,
+    role: { $ne: "admin" },
+  })
   return { count }
 }
 
