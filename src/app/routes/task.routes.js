@@ -17,9 +17,9 @@ router.get("/tasks", auth(), getTasksController)
 router.get("/tasks/:id", auth(), getTaskByIdController)
 router.delete("/tasks/:id", auth(), deleteTaskController)
 router.patch("/tasks/:id", auth(), updateTaskController)
+router.patch("/tasks/:id/status", auth(), updateTaskStatusController)
 
 router.post("/assign-task", auth(["admin"]), assignTaskController)
-router.post("/update-task-status", auth(), updateTaskStatusController)
 
 router.get("/tasks-count", auth(["admin"]), getTaskCountController)
 export default router

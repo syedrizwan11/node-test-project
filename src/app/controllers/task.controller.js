@@ -27,7 +27,6 @@ const updateTaskSchema = Joi.object({
 })
 
 const updateTaskStatusSchema = Joi.object({
-  id: Joi.string().required(),
   status: Joi.string()
     .valid(...Object.values(TaskStatus))
     .required(),
@@ -38,11 +37,7 @@ const assignTaskSchema = Joi.object({
   assignedTo: Joi.string().required(),
 })
 
-const deleteTaskSchema = Joi.object({
-  id: Joi.string().required(),
-})
-
-const getTaskByIdSchema = Joi.object({
+const taskIdSchema = Joi.object({
   id: Joi.string().required(),
 })
 
@@ -64,7 +59,7 @@ export const getTasksController = asyncHandler(async (req, res) => {
 })
 
 export const getTaskByIdController = asyncHandler(async (req, res) => {
-  const { error, value } = getTaskByIdSchema.validate(req.params)
+  const { error, value } = taskIdSchema.validate(req.params)
   if (error) {
     throw new CustomError(400, error.details[0].message)
   }
@@ -92,11 +87,23 @@ export const updateTaskController = asyncHandler(async (req, res) => {
 })
 
 export const updateTaskStatusController = asyncHandler(async (req, res) => {
-  const { error, value } = updateTaskStatusSchema.validate(req.body)
-  if (error) {
-    throw new CustomError(400, error.details[0].message)
+  const { error: bodyError, value: bodyValue } =
+    updateTaskStatusSchema.validate(req.body)
+
+  const { error: paramsError, value: paramsValue } = taskIdSchema.validate(
+    req.params,
+  )
+  if (bodyError || paramsError) {
+    throw new CustomError(
+      400,
+      bodyError
+        ? bodyError.details[0]?.message
+        : paramsError.details[0]?.message,
+    )
   }
-  const { id, status } = value
+
+  const { id } = paramsValue
+  const { status } = bodyValue
 
   const data = await updateTaskStatus(id, status, req.user)
 
@@ -122,7 +129,7 @@ export const assignTaskController = async (req, res) => {
 }
 
 export const deleteTaskController = asyncHandler(async (req, res) => {
-  const { error, value } = deleteTaskSchema.validate(req.params)
+  const { error, value } = taskIdSchema.validate(req.params)
   if (error) {
     throw new CustomError(400, error.details[0].message)
   }

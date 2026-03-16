@@ -1,4 +1,4 @@
-import { UserRoles } from "../constants/index.js"
+import { TaskStatus, UserRoles } from "../constants/index.js"
 import { Task } from "../models/task.model.js"
 import { CustomError } from "../utils/customError.js"
 
@@ -64,15 +64,18 @@ export const updateTaskStatus = async (taskId, status, user) => {
   const task = await Task.findById(taskId)
 
   if (!task) throw new CustomError(404, "Task not found")
-  if (user.role !== UserRoles.ADMIN && task.assignedTo.toString() !== user.id) {
+  if (
+    user.role !== UserRoles.ADMIN &&
+    task.assignedTo?.toString() !== user.id
+  ) {
     throw new CustomError(403, "forbidden: cannot update this task")
   }
 
   const updatedTask = await Task.findByIdAndUpdate(
     taskId,
     {
-      status: status,
-      completedAt: status === taskStatus.COMPLETED ? new Date() : null,
+      status,
+      completedAt: status === TaskStatus.COMPLETED ? new Date() : null,
     },
     {
       new: true,
